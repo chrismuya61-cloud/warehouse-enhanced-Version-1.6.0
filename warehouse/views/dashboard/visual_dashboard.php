@@ -10,12 +10,40 @@
                         <hr />
                         
                         <div class="row">
-                            <div class="col-md-4">
-                                <div class="widget-box-card bg-success text-white" style="padding:20px; border-radius:5px; color:white; background:#28b8da;">
-                                    <h3 class="no-margin"><?php echo app_format_money($inventory_value_data->total_value ?? 0, get_base_currency()->symbol); ?></h3>
-                                    <span style="font-size:14px;"><?php echo _l('wh_total_inventory_value'); ?></span>
-                                </div>
-                            </div>
+    <div class="col-md-4">
+        <div class="panel_s widget-card-enhanced gradient-1">
+            <div class="panel-body text-white">
+                <div class="widget-icon"><i class="fa fa-money"></i></div>
+                <div class="widget-details">
+                    <h3 class="no-margin font-bold"><?php echo app_format_money($inventory_value_data->total_value ?? 0, get_base_currency()->symbol); ?></h3>
+                    <span class="text-uppercase opacity-70"><?php echo _l('wh_total_inventory_value'); ?></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel_s widget-card-enhanced gradient-2">
+            <div class="panel-body text-white">
+                <div class="widget-icon"><i class="fa fa-cubes"></i></div>
+                <div class="widget-details">
+                    <h3 class="no-margin font-bold"><?php echo number_format($inventory_value_data->total_units ?? 0); ?></h3>
+                    <span class="text-uppercase opacity-70"><?php echo _l('wh_total_units_in_stock'); ?></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel_s widget-card-enhanced gradient-3">
+            <div class="panel-body text-white">
+                <div class="widget-icon"><i class="fa fa-exclamation-triangle"></i></div>
+                <div class="widget-details">
+                    <h3 class="no-margin font-bold"><?php echo count($low_stock_alerts); ?></h3>
+                    <span class="text-uppercase opacity-70"><?php echo _l('wh_low_stock_items'); ?></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                             <div class="col-md-4">
                                 <div class="widget-box-card bg-info text-white" style="padding:20px; border-radius:5px; color:white; background:#03a9f4;">
                                     <h3 class="no-margin"><?php echo number_format($inventory_value_data->total_units ?? 0); ?></h3>

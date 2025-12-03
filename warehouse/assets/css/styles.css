@@ -220,3 +220,57 @@ img.images_w_table {
   .dropup .dropdown-menu {
     bottom: unset !important;
 }
+
+/* --- Dashboard Enhancements --- */
+.widget-card-enhanced {
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    border: none;
+}
+.widget-card-enhanced:hover {
+    transform: translateY(-5px);
+}
+.widget-icon {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 40px;
+    opacity: 0.2;
+}
+.widget-details {
+    position: relative;
+    z-index: 2;
+}
+.opacity-70 { opacity: 0.8; font-size: 11px; letter-spacing: 0.5px; }
+
+/* Gradients */
+.gradient-1 { background: linear-gradient(45deg, #28b8da, #67e6dc); }
+.gradient-2 { background: linear-gradient(45deg, #03a9f4, #4fc3f7); }
+.gradient-3 { background: linear-gradient(45deg, #ff6f00, #ffca28); }
+
+/* --- Client Portal Enhancements --- */
+.shipment-stat-box {
+    text-align: center;
+    padding: 10px;
+}
+.shipment-stat-box .stat-label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.border-right { border-right: 1px solid #f0f0f0; }
+.border-left { border-left: 1px solid #f0f0f0; }
+
+/* Improve Table Visuals */
+.table-invoices thead th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+}
