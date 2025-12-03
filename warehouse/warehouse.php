@@ -40,7 +40,7 @@ function warehouse_permissions() {
     register_staff_capabilities('wh_dashboard', ['view'], _l('wh_dashboard'));
     register_staff_capabilities('wh_setting', $caps, _l('warehouse_settings'));
 
-    // RESTORED Permissions from 1.3.9 (Required for missing menus)
+    // RESTORED Permissions from 1.3.9
     register_staff_capabilities('wh_packing_list', $caps, _l('wh_packing_lists'));
     register_staff_capabilities('wh_internal_delivery_note', $caps, _l('internal_delivery_note'));
     register_staff_capabilities('wh_loss_adjustment', $caps, _l('loss_adjustment'));
@@ -56,7 +56,7 @@ function warehouse_permissions() {
 function warehouse_menu_items() {
     $CI = &get_instance();
     
-    // Check if user has ANY warehouse permission to show the main menu
+    // Check if user has ANY warehouse permission
     if (has_permission('warehouse_item', '', 'view') || 
         has_permission('wh_dashboard', '', 'view') || 
         has_permission('wh_stock_import', '', 'view') || 
@@ -158,15 +158,11 @@ function warehouse_load_js(){
     if (strpos($viewuri, '/admin/warehouse/visual_dashboard') !== false) {
          echo '<script src="' . module_dir_url(WAREHOUSE_MODULE_NAME, 'assets/js/dashboard/visual_dashboard.js.php').'?v=' . time().'"></script>';
     }
-    // Load shared JS for other pages
+    // Load shared JS
     if (strpos($viewuri, '/admin/warehouse') !== false) {
          echo '<script src="' . module_dir_url(WAREHOUSE_MODULE_NAME, 'assets/plugins/handsontable/chosen.jquery.js') . '"></script>';
          echo '<script src="' . module_dir_url(WAREHOUSE_MODULE_NAME, 'assets/plugins/handsontable/handsontable-chosen-editor.js') . '"></script>';
          echo '<script src="' . module_dir_url(WAREHOUSE_MODULE_NAME, 'assets/plugins/signature_pad.min.js') . '"></script>';
-    }
-    // Load JS for Packing Lists if on that page
-    if (strpos($viewuri, '/admin/warehouse/manage_packing_list') !== false) {
-         // Add specific JS if needed
     }
 }
 

@@ -15,20 +15,16 @@
 		              	</div>
 		              	<div class="row">    
 	                        <div class="_buttons col-md-3">
-	                        	
 	                        	<?php if (has_permission('wh_internal_delivery_note', '', 'create') || is_admin()) { ?>
                                 <a href="<?php echo admin_url('warehouse/internal_delivery'); ?>"class="btn btn-info pull-left mright10 display-block">
 		                            <?php echo _l('_new'); ?>
 		                        </a>
 		                        <?php } ?>
-			               
-
 		                    </div>
 		                     <div class="col-md-1 pull-right">
 		                        <a href="#" class="btn btn-default pull-right btn-with-tooltip toggle-small-view hidden-xs" onclick="toggle_small_view_proposal('.internal_delivery_sm','#internal_delivery_sm_view'); return false;" data-toggle="tooltip" title="<?php echo _l('invoices_toggle_table_tooltip'); ?>"><i class="fa fa-angle-double-left"></i></a>
 		                    </div>
                     	</div>
-
                     <br/>
                     <?php render_datatable(array(
                         _l('internal_delivery_note'),
@@ -38,8 +34,6 @@
                         _l('total_amount'),
                         _l('status_label')
                         ),'table_internal_delivery',['internal_delivery_sm' => 'internal_delivery_sm']); ?>
-						
-
 					</div>
 				</div>
 			</div>
@@ -47,7 +41,6 @@
             <div id="internal_delivery_sm_view" class="hide">
             </div>
         </div>
-
 		</div>
 	</div>
 </div>
