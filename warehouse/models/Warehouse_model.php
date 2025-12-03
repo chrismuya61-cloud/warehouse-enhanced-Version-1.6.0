@@ -6,6 +6,7 @@ require_once(__DIR__ . '/traits/WarehouseItemsTrait.php');
 require_once(__DIR__ . '/traits/WarehouseInventoryTrait.php');
 require_once(__DIR__ . '/traits/WarehouseTransfersTrait.php');
 require_once(__DIR__ . '/traits/WarehouseReportsTrait.php');
+require_once(__DIR__ . '/traits/WarehouseOrderReturnsTrait.php'); // ADDED THIS LINE
 
 class Warehouse_model extends App_Model {
     use WarehouseSettingsTrait;
@@ -13,6 +14,7 @@ class Warehouse_model extends App_Model {
     use WarehouseInventoryTrait;
     use WarehouseTransfersTrait;
     use WarehouseReportsTrait;
+    use WarehouseOrderReturnsTrait; // ADDED THIS LINE
 
     public function __construct() {
         parent::__construct();
