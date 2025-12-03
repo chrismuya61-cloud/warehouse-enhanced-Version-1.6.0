@@ -1,5 +1,7 @@
 <?php
 trait WarehouseInventoryController {
+    
+    // --- EXISTING 1.6.0 METHODS ---
     public function visual_dashboard() {
         if (!has_permission('wh_dashboard', '', 'view')) access_denied();
         $data['title'] = _l('wh_dashboard');
@@ -44,5 +46,47 @@ trait WarehouseInventoryController {
                        <td><input type="number" name="items['.$k.'][physical_quantity]" class="form-control" value="'.$item['inventory_number'].'"></td></tr>';
         }
         echo json_encode(['html' => $html]);
+    }
+
+    // --- RESTORED METHODS FOR LOSS ADJUSTMENT ---
+
+    public function loss_adjustment() {
+        if (!has_permission('wh_loss_adjustment', '', 'view') && !has_permission('wh_loss_adjustment', '', 'view_own')) {
+            access_denied('warehouse');
+        }
+        $data['title'] = _l('loss_adjustment');
+        $this->load->view('loss_adjustment/manage', $data);
+    }
+
+    public function add_loss_adjustment($id = '') {
+        if ($this->input->post()) {
+            $data = $this->input->post();
+            if ($id == '') {
+                if (!has_permission('wh_loss_adjustment', '', 'create')) access_denied();
+                $id = $this->warehouse_model->add_loss_adjustment($data);
+                if ($id) {
+                    set_alert('success', _l('added_successfully'));
+                    redirect(admin_url('warehouse/loss_adjustment'));
+                }
+            } else {
+                if (!has_permission('wh_loss_adjustment', '', 'edit')) access_denied();
+                $success = $this->warehouse_model->update_loss_adjustment($data, $id);
+                if ($success) {
+                    set_alert('success', _l('updated_successfully'));
+                }
+                redirect(admin_url('warehouse/loss_adjustment'));
+            }
+        }
+
+        $data['warehouses'] = $this->warehouse_model->get_warehouse();
+        
+        if ($id != '') {
+            $data['loss_adjustment'] = $this->warehouse_model->get_loss_adjustment($id);
+            $data['title'] = _l('edit_loss_adjustment');
+        } else {
+            $data['title'] = _l('add_loss_adjustment');
+        }
+
+        $this->load->view('loss_adjustment/add_loss_adjustment', $data);
     }
 }
