@@ -323,3 +323,22 @@ if (get_option('inventory_received_number_prefix') == '') add_option('inventory_
 if (get_option('next_inventory_received_mumber') == '') add_option('next_inventory_received_mumber', 1, 1);
 if (get_option('inventory_delivery_number_prefix') == '') add_option('inventory_delivery_number_prefix', 'XK', 1);
 if (get_option('next_inventory_delivery_mumber') == '') add_option('next_inventory_delivery_mumber', 1, 1);
+
+// --------------------------------------------------------------------------
+// WARRANTY CLAIMS TABLE
+// --------------------------------------------------------------------------
+if (!$CI->db->table_exists(db_prefix() . 'wh_warranty_claims')) {
+    $CI->db->query('CREATE TABLE `' . db_prefix() . "wh_warranty_claims` (
+      `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+      `detail_id` int(11) NOT NULL COMMENT 'Link to goods_delivery_detail',
+      `commodity_id` int(11) NOT NULL,
+      `customer_id` int(11) NOT NULL,
+      `claim_date` date NOT NULL,
+      `issue_description` text NULL,
+      `status` varchar(50) DEFAULT 'pending' COMMENT 'pending, in_progress, resolved, rejected',
+      `resolution_note` text NULL,
+      `staff_id` int(11) NOT NULL,
+      `date_created` datetime NOT NULL,
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=" . $CI->db->char_set . ';');
+}
