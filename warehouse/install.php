@@ -353,3 +353,27 @@ if (!$CI->db->table_exists(db_prefix() . 'wh_warranty_claims')) {
         $CI->db->query('ALTER TABLE `' . db_prefix() . 'wh_warranty_claims` ADD COLUMN `expense_id` INT(11) DEFAULT 0;');
     }
 }
+
+// --------------------------------------------------------------------------
+// LICENSE MANAGEMENT TABLES
+// --------------------------------------------------------------------------
+
+if (!$CI->db->table_exists(db_prefix() . 'wh_licences')) {
+    $CI->db->query('CREATE TABLE `' . db_prefix() . "wh_licences` (
+      `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+      `serial_number` varchar(200) NOT NULL,
+      `commodity_id` int(11) NOT NULL,
+      `customer_id` int(11) NOT NULL,
+      `invoice_id` int(11) DEFAULT 0,
+      `delivery_id` int(11) DEFAULT 0,
+      `licence_key` text NULL,
+      `licence_type` varchar(50) DEFAULT 'temporary' COMMENT 'temporary, permanent',
+      `validity_start_date` date NULL,
+      `validity_end_date` date NULL,
+      `status` varchar(50) DEFAULT 'draft' COMMENT 'draft, active, expired, suspended',
+      `notes` text NULL,
+      `date_created` datetime NOT NULL,
+      `staff_id` int(11) NOT NULL,
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=" . $CI->db->char_set . ';');
+}
