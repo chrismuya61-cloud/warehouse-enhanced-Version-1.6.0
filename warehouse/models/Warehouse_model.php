@@ -145,6 +145,8 @@ class Warehouse_model extends App_Model {
              $this->db->update(db_prefix() . 'goods_delivery', $data);
         } else {
              $this->db->insert(db_prefix() . 'goods_delivery', $data);
+			// Inside approval logic
+$this->auto_create_licences_from_delivery($id);
         }
         return true;
     }
