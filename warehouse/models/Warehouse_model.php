@@ -190,3 +190,104 @@ class Warehouse_model extends App_Model {
 		return $this->db->get(db_prefix() . 'warehouse')->result_array();
 	}
 }
+
+// --------------------------------------------------------------------------
+    // LICENSE MODEL FUNCTIONS
+    // --------------------------------------------------------------------------
+
+    public function add_licence($data) {
+        $data['date_created'] = date('Y-m-d H:i:s');
+        $data['staff_id'] = get_staff_user_id();
+        $this->db->insert(db_prefix() . 'wh_licences', $data);
+        return $this->db->insert_id();
+    }
+
+    public function update_licence($data, $id) {
+        $this->db->where('id', $id);
+        return $this->db->update(db_prefix() . 'wh_licences', $data);
+    }
+
+    public function get_licence($id) {
+        $this->db->where('id', $id);
+        return $this->db->get(db_prefix() . 'wh_licences')->row();
+    }
+
+    // AUTOMATION: Call this function when Goods Delivery is Approved
+    public function auto_create_licences_from_delivery($delivery_id) {
+        $this->db->where('id', $delivery_id);
+        $delivery = $this->db->get(db_prefix() . 'goods_delivery')->row();
+        
+        if(!$delivery) return false;
+
+        // Get Details
+        $this->db->where('goods_delivery_id', $delivery_id);
+        $details = $this->db->get(db_prefix() . 'goods_delivery_detail')->result_array();
+
+        foreach($details as $detail){
+            // Only create if Serial Number exists and doesn't already have a licence for this delivery
+            if(!empty($detail['serial_number'])){
+                
+                // Check duplicate
+                $this->db->where('serial_number', $detail['serial_number']);
+                $this->db->where('delivery_id', $delivery_id);
+                $exists = $this->db->get(db_prefix().'wh_licences')->row();
+
+                if(!$exists){
+                    $data = [
+                        'serial_number' => $detail['serial_number'],
+                        'commodity_id' => $detail['commodity_code'],
+                        'customer_id' => $delivery->customer_code,
+                        'invoice_id' => $delivery->invoice_id, // Assuming relation exists
+                        'delivery_id' => $delivery_id,
+                        'status' => 'draft',
+                        'licence_type' => 'temporary', // Default
+                        'date_created' => date('Y-m-d H:i:s'),
+                        'staff_id' => get_staff_user_id()
+                    ];
+                    $this->db->insert(db_prefix().'wh_licences', $data);
+                }
+            }
+        }
+        return true;
+    }
+
+    // MANUAL CREATION HELPER
+    public function get_serials_for_licensing($clientid, $invoiceid) {
+        $this->db->select(db_prefix().'goods_delivery_detail.serial_number, '.db_prefix().'items.description');
+        $this->db->from(db_prefix().'goods_delivery_detail');
+        $this->db->join(db_prefix().'goods_delivery', db_prefix().'goods_delivery.id = '.db_prefix().'goods_delivery_detail.goods_delivery_id', 'left');
+        $this->db->join(db_prefix().'items', db_prefix().'items.id = '.db_prefix().'goods_delivery_detail.commodity_code', 'left');
+        
+        if($clientid){
+            $this->db->where(db_prefix().'goods_delivery.customer_code', $clientid);
+        }
+        if($invoiceid){
+             $this->db->where(db_prefix().'goods_delivery.invoice_id', $invoiceid);
+        }
+        $this->db->where(db_prefix().'goods_delivery_detail.serial_number !=', '');
+        
+        return $this->db->get()->result_array();
+    }
+
+    // CRON JOB
+    public function cron_check_licence_expiration() {
+        // Find licenses expiring in 7 days
+        $date_check = date('Y-m-d', strtotime('+7 days'));
+        
+        $this->db->where('validity_end_date', $date_check);
+        $this->db->where('status', 'active');
+        $expiring = $this->db->get(db_prefix().'wh_licences')->result_array();
+
+        foreach($expiring as $licence){
+            // Notify Staff
+            $staff = $licence['staff_id'];
+            add_notification([
+                'description'     => 'License Expiring for Serial: ' . $licence['serial_number'],
+                'touserid'        => $staff,
+                'fromcompany'     => true,
+                'link'            => 'warehouse/licence_management',
+            ]);
+            
+            // Optional: Email Customer logic here
+        }
+    }
