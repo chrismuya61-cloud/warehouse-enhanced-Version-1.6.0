@@ -385,4 +385,3 @@ if (!$CI->db->table_exists(db_prefix() . 'wh_licences')) {
         $CI->db->query('ALTER TABLE `' . db_prefix() . 'wh_warranty_claims` ADD COLUMN `expense_id` INT(11) DEFAULT 0;');
     }
 }
-            
