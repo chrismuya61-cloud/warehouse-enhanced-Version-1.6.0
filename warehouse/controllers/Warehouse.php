@@ -21,6 +21,66 @@ class Warehouse extends AdminController {
         $this->load->model('warehouse_model');
     }
 
+	// --------------------------------------------------------------------------
+    // WARRANTY MANAGEMENT FEATURES
+    // --------------------------------------------------------------------------
+
+    public function warranty_dashboard()
+    {
+        if (!has_permission('wh_warranty', '', 'view')) access_denied('Warranty');
+        
+        $data['title'] = _l('warranty_dashboard');
+        
+        // Fetch Stats
+        $data['total_active'] = $this->warehouse_model->get_warranty_count('active');
+        $data['expiring_soon'] = $this->warehouse_model->get_warranty_count('expiring');
+        $data['total_expired'] = $this->warehouse_model->get_warranty_count('expired');
+        $data['open_claims'] = $this->warehouse_model->get_claim_count('pending');
+        
+        $this->load->view('warehouse/warranty/dashboard', $data);
+    }
+
+    public function warranty_list()
+    {
+        if (!has_permission('wh_warranty', '', 'view')) access_denied('Warranty');
+        
+        if ($this->input->is_ajax_request()) {
+            $this->app->get_table_data(module_views_path('warehouse', 'warranty/table_warranty_list'));
+        }
+        
+        $data['title'] = _l('warranty_list');
+        $this->load->view('warehouse/warranty/manage_list', $data);
+    }
+
+    public function warranty_claims()
+    {
+        if (!has_permission('wh_warranty', '', 'view')) access_denied('Warranty');
+        
+        if ($this->input->is_ajax_request()) {
+            $this->app->get_table_data(module_views_path('warehouse', 'warranty/table_warranty_claims'));
+        }
+        
+        $data['title'] = _l('warranty_claims');
+        $this->load->view('warehouse/warranty/manage_claims', $data);
+    }
+
+    public function add_edit_claim($id = '')
+    {
+        if ($this->input->post()) {
+            $data = $this->input->post();
+            if ($id == '') {
+                $success = $this->warehouse_model->add_warranty_claim($data);
+                $message = $success ? _l('added_successfully') : _l('problem_adding');
+            } else {
+                $success = $this->warehouse_model->update_warranty_claim($data, $id);
+                $message = $success ? _l('updated_successfully') : _l('problem_updating');
+            }
+            set_alert($success ? 'success' : 'danger', $message);
+            redirect(admin_url('warehouse/warranty_claims'));
+        }
+        
+        // Load modal view logic here or handle via JS
+    }
     // --- RESTORED AJAX HANDLERS (Prevent 404s on Frontend) ---
 
     /**
