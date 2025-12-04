@@ -179,6 +179,62 @@ class Warehouse extends AdminController {
         
         // Load modal view logic here or handle via JS
     }
+
+// --------------------------------------------------------------------------
+    // LICENSE MANAGEMENT
+    // --------------------------------------------------------------------------
+
+    public function licence_management()
+    {
+        if (!has_permission('wh_licences', '', 'view')) access_denied('Licences');
+        
+        if ($this->input->is_ajax_request()) {
+            $this->app->get_table_data(module_views_path('warehouse', 'licences/table_licences'));
+        }
+        
+        $data['title'] = _l('licence_management');
+        $this->load->view('warehouse/licences/manage', $data);
+    }
+
+    public function add_edit_licence($id = '')
+    {
+        if ($this->input->post()) {
+            $data = $this->input->post();
+            if ($id == '') {
+                $success = $this->warehouse_model->add_licence($data);
+                $message = $success ? _l('added_successfully') : _l('problem_adding');
+            } else {
+                $success = $this->warehouse_model->update_licence($data, $id);
+                $message = $success ? _l('updated_successfully') : _l('problem_updating');
+            }
+            set_alert($success ? 'success' : 'danger', $message);
+            redirect(admin_url('warehouse/licence_management'));
+        }
+    }
+
+    public function get_licence_modal($id = '')
+    {
+        if (!$this->input->is_ajax_request()) show_404();
+        
+        if($id != ''){
+            $data['licence'] = $this->warehouse_model->get_licence($id);
+        }
+        
+        // For Manual Creation dropdowns
+        $this->load->model('clients_model');
+        $data['clients'] = $this->clients_model->get();
+        
+        $this->load->view('warehouse/licences/licence_modal', $data);
+    }
+    
+    // AJAX: Get Serials by Customer/Invoice for Manual Creation
+    public function get_available_serials_for_licence() {
+        $clientid = $this->input->post('clientid');
+        $invoiceid = $this->input->post('invoiceid');
+        
+        $serials = $this->warehouse_model->get_serials_for_licensing($clientid, $invoiceid);
+        echo json_encode($serials);
+    }
     // --- RESTORED AJAX HANDLERS (Prevent 404s on Frontend) ---
 
     /**
