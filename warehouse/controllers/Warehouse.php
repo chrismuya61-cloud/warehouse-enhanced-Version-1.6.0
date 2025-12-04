@@ -21,6 +21,26 @@ class Warehouse extends AdminController {
         $this->load->model('warehouse_model');
     }
 
+	// Add inside class Warehouse extends AdminController { ... }
+
+    /**
+     * Returns the Warranty Claim Modal View
+     */
+    public function get_claim_modal($detail_id, $commodity_id, $customer_id)
+    {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+        $data['detail_id'] = $detail_id;
+        $data['commodity_id'] = $commodity_id;
+        $data['customer_id'] = $customer_id;
+        
+        // Optional: Fetch item/customer details for display if needed
+        $data['item'] = $this->warehouse_model->get_commodity($commodity_id);
+        
+        $this->load->view('warehouse/warranty/claim_modal', $data);
+    }
 	// --------------------------------------------------------------------------
     // WARRANTY MANAGEMENT FEATURES
     // --------------------------------------------------------------------------
