@@ -21,6 +21,43 @@ class Warehouse_model extends App_Model {
         parent::__construct();
     }
 
+	// Warranty Dashboard Counts
+    public function get_warranty_count($type) {
+        $today = date('Y-m-d');
+        $this->db->select('count(*) as count');
+        $this->db->from(db_prefix() . 'goods_delivery_detail');
+        $this->db->where('guarantee_period IS NOT NULL');
+        $this->db->where('guarantee_period !=', '');
+
+        if ($type == 'active') {
+             $this->db->where('guarantee_period >=', $today);
+        } elseif ($type == 'expired') {
+             $this->db->where('guarantee_period <', $today);
+        } elseif ($type == 'expiring') {
+             $next_30 = date('Y-m-d', strtotime('+30 days'));
+             $this->db->where('guarantee_period >=', $today);
+             $this->db->where('guarantee_period <=', $next_30);
+        }
+        return $this->db->get()->row()->count;
+    }
+
+    public function get_claim_count($status) {
+        $this->db->where('status', $status);
+        return $this->db->count_all_results(db_prefix() . 'wh_warranty_claims');
+    }
+
+    // CRUD for Claims
+    public function add_warranty_claim($data) {
+        $data['date_created'] = date('Y-m-d H:i:s');
+        $data['staff_id'] = get_staff_user_id();
+        $this->db->insert(db_prefix() . 'wh_warranty_claims', $data);
+        return $this->db->insert_id();
+    }
+
+    public function update_warranty_claim($data, $id) {
+        $this->db->where('id', $id);
+        return $this->db->update(db_prefix() . 'wh_warranty_claims', $data);
+    }
     /**
      * RESTORED: Add Activity Log
      */
