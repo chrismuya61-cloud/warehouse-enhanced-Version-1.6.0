@@ -205,8 +205,18 @@ function warehouse_load_js(){
          echo '<script src="' . module_dir_url(WAREHOUSE_MODULE_NAME, 'assets/plugins/simplelightbox/simple-lightbox.jquery.min.js') . '"></script>';
          echo '<script src="' . module_dir_url(WAREHOUSE_MODULE_NAME, 'assets/plugins/simplelightbox/masonry-layout-vanilla.min.js') . '"></script>';
     }
+    function warehouse_load_js(){
+    $CI = &get_instance();
+    $viewuri = $_SERVER['REQUEST_URI'];
+    
+    // Add this block for Warranty pages
+    if (strpos($viewuri, '/warehouse/warranty_list') !== false || 
+        strpos($viewuri, '/warehouse/warranty_dashboard') !== false || 
+        strpos($viewuri, '/warehouse/warranty_claims') !== false) {
+        
+        echo '<script src="' . module_dir_url(WAREHOUSE_MODULE_NAME, 'assets/js/warranty.js').'?v=' . time().'"></script>';
+    }
 }
-
 function warehouse_add_head_components(){
     $viewuri = $_SERVER['REQUEST_URI'];
 
