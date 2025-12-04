@@ -279,3 +279,133 @@ function warehouse_client_add_head_components() {
        echo '<link href="' . module_dir_url(WAREHOUSE_MODULE_NAME, 'assets/css/shipments/order_status.css')  .'?v=' . time(). '"  rel="stylesheet" type="text/css" />'; 
     }
 }
+// ==============================================================================
+//  MISSING HOOKS RESTORED FOR VERSION 1.6.0 (Append to warehouse/warehouse.php)
+// ==============================================================================
+
+// 1. Invoice Integration Hooks (View Delivery Notes on Invoice)
+hooks()->add_action('after_invoice_view_as_client_link', 'warehouse_module_init_tab');
+hooks()->add_action('invoice_add_good_delivery_tab_content', 'warehouse_module_init_tab_content');
+
+// 2. Cron Job Hook (Inventory Warnings)
+hooks()->add_action('after_cron_run', 'items_send_notification_inventory_warning');
+
+// 3. Omni Sales Integration Hooks
+hooks()->add_action('omni_order_detail_header', 'omni_order_detail_add_button_header');
+hooks()->add_action('omni_sales_after_invoice_added', 'wh_omni_sales_after_invoice_added');
+hooks()->add_action('omni_sales_after_delivery_note_added', 'wh_omni_sales_after_delivery_note_added');
+
+// 4. Task Relation Hook (Link Tasks to Stock Import/Export)
+hooks()->add_action('task_related_to_select', 'warehouse_task_related_to_select');
+
+
+// ==============================================================================
+//  HELPER FUNCTIONS FOR RESTORED HOOKS
+// ==============================================================================
+
+/**
+ * Renders the "Goods Delivery" tab title on the Invoice View
+ */
+function warehouse_module_init_tab($invoice_id){
+    if (has_permission('wh_stock_export', '', 'view')) {
+        echo '<li role="presentation"><a href="' . admin_url('warehouse/manage_delivery_filter/'.$invoice_id->id).'" >'._l('goods_delivery_tab').'</a></li>';
+    }
+}
+
+/**
+ * Renders the content (table of delivery notes) for the Invoice Tab
+ */
+function warehouse_module_init_tab_content($invoice_id){
+    $CI = &get_instance();
+    $CI->load->model('warehouse/warehouse_model');
+    
+    // Ensure the model method exists or handle gracefully
+    if(method_exists($CI->warehouse_model, 'get_goods_delivery_from_invoice')){
+        $array_goods_delivery = $CI->warehouse_model->get_goods_delivery_from_invoice($invoice_id);
+        
+        echo '<div role="tabpanel" class="tab-pane" id="tab_goods_delivery">';
+        echo '<table class="table dt-table border table-striped">';
+        echo '<thead><th>'._l('goods_delivery_code').'</th><th>'._l('accounting_date').'</th><th>'._l('total_money').'</th><th>'._l('status').'</th></thead>';
+        echo '<tbody>';
+        foreach ($array_goods_delivery as $value) {
+            echo '<tr>';
+            echo '<td><a href="' . admin_url('warehouse/manage_delivery/' . $value['id'] ).'">' . $value['goods_delivery_code'] . '</a></td>';
+            echo '<td>'._d($value['date_add']).'</td>';
+            echo '<td>'.app_format_money((float)($value['after_discount']),'').'</td>'; 
+            $status = ($value['approval'] == 1) ? _l('approved') : _l('not_yet_approve');
+            echo '<td>'.$status.'</td>';
+            echo '</tr>';
+        }
+        echo '</tbody></table></div>';
+    }
+}
+
+/**
+ * Cron Job function to check low stock and send notifications
+ */
+function items_send_notification_inventory_warning($manually) {
+    $CI = &get_instance();
+    $CI->load->model('warehouse/warehouse_model');
+    if(method_exists($CI->warehouse_model, 'items_send_notification_inventory_warning')){
+        $CI->warehouse_model->items_send_notification_inventory_warning();
+    }
+}
+
+/**
+ * Adds "Stock Import" and "Stock Export" options to Task Relations
+ */
+function warehouse_task_related_to_select($value) {
+    $selected = ($value == 'stock_import') ? 'selected' : '';
+    echo "<option value='stock_import' ".$selected.">"._l('stock_import')."</option>";
+    
+    $selected = ($value == 'stock_export') ? 'selected' : '';
+    echo "<option value='stock_export' ".$selected.">"._l('stock_export')."</option>";
+}
+
+/**
+ * Adds "View Shipment" button to Omni Sales Order header
+ */
+function omni_order_detail_add_button_header($order){
+    $CI = &get_instance();
+    if(!$CI->db->table_exists(db_prefix().'wh_omni_shipments')) return;
+    
+    $CI->load->model('warehouse/warehouse_model');
+    $shipment = $CI->warehouse_model->get_shipment_by_order($order->id);
+    if(isset($shipment)){
+        echo '<a href="'.admin_url('warehouse/shipment_detail/' .$order->id).'" class="btn btn-primary mleft5 pull-right">'._l('wh_shipment').'</a>';
+    }
+}
+
+/**
+ * Auto-create shipment when Omni Sales invoice is added
+ */
+function wh_omni_sales_after_invoice_added($order_id) {
+    if(is_numeric($order_id)){
+        $CI = &get_instance();
+        $CI->load->model('warehouse/warehouse_model');
+        $CI->warehouse_model->create_shipment_from_order($order_id);
+    }
+    return true;
+}
+
+/**
+ * Update shipment status when Omni Sales delivery note is added
+ */
+function wh_omni_sales_after_delivery_note_added($order_id) {
+    if($order_id){
+        $CI = &get_instance();
+        $CI->load->model('warehouse/warehouse_model');
+        $shipment = $CI->warehouse_model->get_shipment_by_order($order_id);
+        
+        if(!$shipment){
+             $shipment_id = $CI->warehouse_model->create_shipment_from_order($order_id);
+        } else {
+             $shipment_id = $shipment->id;
+        }
+
+        if(is_numeric($shipment_id)){
+             $CI->warehouse_model->update_shipment_status($shipment_id, ['shipment_status' => 'processing_order']);
+        }
+    }
+    return true;
+}
