@@ -823,3 +823,10 @@ $lang['serial_number'] = 'Serial Number';
 $lang['convert_to_invoice'] = 'Convert to Invoice';
 $lang['confirm_invoice_creation'] = 'Are you sure you want to create an invoice for this claim?';
 $lang['log_expense'] = 'Log Expense';
+
+// LICENCE MANAGEMENT
+$lang['licence_management'] = 'License Management';
+$lang['new_licence'] = 'New License';
+$lang['edit_licence'] = 'Edit License';
+$lang['licence_type'] = 'License Type';
+$lang['validity_end_date'] = 'Expiry Date';
