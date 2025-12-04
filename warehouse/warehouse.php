@@ -30,6 +30,15 @@ hooks()->add_action('invoice_marked_as_cancelled', 'wh_invoice_marked_as_cancell
 hooks()->add_action('invoice_unmarked_as_cancelled', 'wh_invoice_unmarked_as_cancelled');
 hooks()->add_action('after_invoice_updated', 'wh_update_goods_delivery');
 
+// License Expiration Check
+hooks()->add_action('after_cron_run', 'wh_check_licence_expiration');
+
+function wh_check_licence_expiration() {
+    $CI = &get_instance();
+    $CI->load->model('warehouse/warehouse_model');
+    $CI->warehouse_model->cron_check_licence_expiration();
+}
+
 /**
  * Register module permissions
  */
@@ -45,6 +54,7 @@ function warehouse_permissions() {
     register_staff_capabilities('wh_dashboard', ['view'], _l('wh_dashboard'));
     register_staff_capabilities('wh_setting', $caps, _l('warehouse_settings'));
     register_staff_capabilities('wh_warranty', $caps, _l('warranty_management'));
+    register_staff_capabilities('wh_licences', $caps, _l('licence_management'));
 
     // RESTORED Permissions
     register_staff_capabilities('wh_packing_list', $caps, _l('wh_packing_lists'));
@@ -150,6 +160,15 @@ function warehouse_menu_items() {
         'icon'     => 'fa fa-shield', // Shield icon for warranty
         'href'     => admin_url('warehouse/warranty_dashboard'),
         'position' => 25, // Adjust position as needed
+    ]);
+}
+        if (has_permission('wh_licences', '', 'view') || has_permission('wh_licences', '', 'view_own')) {
+    $CI->app_menu->add_sidebar_children_item('warehouse', [
+        'slug'     => 'wa_licence_management',
+        'name'     => _l('licence_management'),
+        'icon'     => 'fa fa-key',
+        'href'     => admin_url('warehouse/licence_management'),
+        'position' => 26,
     ]);
 }
     }
