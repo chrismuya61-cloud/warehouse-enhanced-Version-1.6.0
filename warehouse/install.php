@@ -376,4 +376,13 @@ if (!$CI->db->table_exists(db_prefix() . 'wh_licences')) {
       `staff_id` int(11) NOT NULL,
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=" . $CI->db->char_set . ';');
+} else {
+    // Columns needed for tracking billing status
+    if (!$CI->db->field_exists('invoice_id', db_prefix() . 'wh_warranty_claims')) {
+        $CI->db->query('ALTER TABLE `' . db_prefix() . 'wh_warranty_claims` ADD COLUMN `invoice_id` INT(11) DEFAULT 0;');
+    }
+    if (!$CI->db->field_exists('expense_id', db_prefix() . 'wh_warranty_claims')) {
+        $CI->db->query('ALTER TABLE `' . db_prefix() . 'wh_warranty_claims` ADD COLUMN `expense_id` INT(11) DEFAULT 0;');
+    }
 }
+            
