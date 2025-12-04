@@ -617,3 +617,39 @@ function init_warehouse_customfield($custom_field = ''){
     }
     echo '<option value="warehouse_name" '.$select.' >'. _l('_warehouse').'</option>';
 }
+
+// ---------------------------------------------------------
+// LICENSE MANAGEMENT HOOKS AND PERMISSIONS
+// ---------------------------------------------------------
+
+// 1. Permissions Registration
+hooks()->add_action('admin_init', function() {
+    register_staff_capabilities('wh_licences', ['view', 'view_own', 'create', 'edit', 'delete'], _l('licence_management'));
+});
+
+// 2. Menu Item
+function wh_licence_menu_item(){
+    $CI = &get_instance();
+    if (has_permission('wh_licences', '', 'view') || has_permission('wh_licences', '', 'view_own')) {
+        $CI->app_menu->add_sidebar_children_item('warehouse', [
+            'slug'     => 'wa_licence_management',
+            'name'     => _l('licence_management'),
+            'icon'     => 'fa fa-key',
+            'href'     => admin_url('warehouse/licence_management'),
+            'position' => 26,
+        ]);
+    }
+}
+hooks()->add_action('admin_init', 'wh_licence_menu_item');
+
+// 3. Cron Hook for Expiration Notifications
+hooks()->add_action('after_cron_run', 'wh_check_licence_expiration');
+
+function wh_check_licence_expiration() {
+    $CI = &get_instance();
+    $CI->load->model('warehouse/warehouse_model');
+    // Ensure method exists before calling
+    if(method_exists($CI->warehouse_model, 'cron_check_licence_expiration')){
+        $CI->warehouse_model->cron_check_licence_expiration();
+    }
+}
