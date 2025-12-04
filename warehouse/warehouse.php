@@ -149,7 +149,7 @@ function warehouse_menu_items() {
         'name'     => _l('warranty_management'),
         'icon'     => 'fa fa-shield', // Shield icon for warranty
         'href'     => admin_url('warehouse/warranty_dashboard'),
-        'position' => 21, // Adjust position as needed
+        'position' => 25, // Adjust position as needed
     ]);
 }
     }
