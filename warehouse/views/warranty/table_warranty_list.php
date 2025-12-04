@@ -2,12 +2,12 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 $aColumns = [
-    db_prefix() . 'items.description as item_name', // Adjust based on your item table structure
+    db_prefix() . 'items.description as item_name',
     'serial_number',
     db_prefix() . 'clients.company',
     'guarantee_period',
-    'guarantee_period as time_remaining', // Placeholder for calculation
-    'guarantee_period as status', // Placeholder
+    'guarantee_period as time_remaining',
+    'guarantee_period as status',
     db_prefix() . 'goods_delivery_detail.id as detail_id'
 ];
 
@@ -27,20 +27,11 @@ $rResult = $result['rResult'];
 
 foreach ($rResult as $aRow) {
     $row = [];
-
-    // Item Name
     $row[] = $aRow['item_name'];
-
-    // Serial
-    $row[] = $aRow['serial_number'];
-
-    // Customer
+    $row[] = '<span class="label label-tag">'.$aRow['serial_number'].'</span>';
     $row[] = $aRow[db_prefix() . 'clients.company'];
-
-    // Expiry Date
     $row[] = _d($aRow['guarantee_period']);
 
-    // Time Remaining Calculation
     $now = time(); 
     $your_date = strtotime($aRow['guarantee_period']);
     $datediff = $your_date - $now;
@@ -53,18 +44,13 @@ foreach ($rResult as $aRow) {
         $row[] = '<span class="text-success">' . $days_remaining . ' days left</span>';
         $status = '<span class="label label-success">' . _l('warranty_active') . '</span>';
     }
-
-    // Status
     $row[] = $status;
 
-    // Options (File Claim Button)
     $options = icon_btn('#', 'fa fa-exclamation-triangle', 'btn-warning', [
         'onclick' => 'new_warranty_claim(' . $aRow['detail_id'] . ', '.$aRow[db_prefix() . 'goods_delivery_detail.commodity_code'].', '.$aRow[db_prefix() . 'goods_delivery.customer_code'].'); return false;',
         'data-toggle' => 'tooltip',
         'title' => _l('file_claim')
     ]);
-
     $row[] = $options;
-
     $output['aaData'][] = $row;
 }
