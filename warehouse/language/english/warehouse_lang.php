@@ -803,3 +803,20 @@ $lang['no_pending_purchase_orders_found'] = 'No approved Purchase Orders pending
 $lang['auto_match_scanner'] = 'Auto-Match Scanner';
 $lang['scan_barcodes_or_serials'] = 'Scan Barcodes or Serials';
 $lang['process_matches'] = 'Process Matches';
+
+// WARRANTY MANAGEMENT
+$lang['warranty_management'] = 'Warranty Management';
+$lang['warranty_dashboard'] = 'Warranty Dashboard';
+$lang['warranty_claims'] = 'Warranty Claims';
+$lang['file_claim'] = 'File Claim';
+$lang['claim_status'] = 'Claim Status';
+$lang['claim_date'] = 'Claim Date';
+$lang['issue_description'] = 'Issue Description';
+$lang['resolution_note'] = 'Resolution Note';
+$lang['warranty_expiring_soon'] = 'Expiring Soon (30 Days)';
+$lang['total_active_warranties'] = 'Total Active Warranties';
+$lang['total_expired_warranties'] = 'Total Expired Warranties';
+$lang['open_claims'] = 'Open Claims';
+$lang['warranty_active'] = 'Active';
+$lang['warranty_expired'] = 'Expired';
+$lang['time_remaining'] = 'Time Remaining';
