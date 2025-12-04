@@ -44,6 +44,7 @@ function warehouse_permissions() {
     register_staff_capabilities('wh_stock_take', $caps, _l('wh_stock_take'));
     register_staff_capabilities('wh_dashboard', ['view'], _l('wh_dashboard'));
     register_staff_capabilities('wh_setting', $caps, _l('warehouse_settings'));
+    register_staff_capabilities('wh_warranty', $caps, _l('warranty_management'));
 
     // RESTORED Permissions
     register_staff_capabilities('wh_packing_list', $caps, _l('wh_packing_lists'));
@@ -142,6 +143,15 @@ function warehouse_menu_items() {
                 'slug' => 'wa_setting', 'name' => _l('settings'), 'href' => admin_url('warehouse/setting'), 'position' => 30
             ]);
         }
+        if (has_permission('wh_warranty', '', 'view') || has_permission('wh_warranty', '', 'view_own')) {
+    $CI->app_menu->add_sidebar_children_item('warehouse', [
+        'slug'     => 'wa_warranty_management',
+        'name'     => _l('warranty_management'),
+        'icon'     => 'fa fa-shield', // Shield icon for warranty
+        'href'     => admin_url('warehouse/warranty_dashboard'),
+        'position' => 21, // Adjust position as needed
+    ]);
+}
     }
 }
 
