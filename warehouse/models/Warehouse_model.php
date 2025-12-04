@@ -215,44 +215,52 @@ $this->auto_create_licences_from_delivery($id);
     }
 
     // AUTOMATION: Call this function when Goods Delivery is Approved
-    public function auto_create_licences_from_delivery($delivery_id) {
-        $this->db->where('id', $delivery_id);
-        $delivery = $this->db->get(db_prefix() . 'goods_delivery')->row();
-        
-        if(!$delivery) return false;
+public function auto_create_licences_from_delivery($delivery_id) {
+    $this->db->where('id', $delivery_id);
+    $delivery = $this->db->get(db_prefix() . 'goods_delivery')->row();
+    
+    if(!$delivery) return false;
 
-        // Get Details
-        $this->db->where('goods_delivery_id', $delivery_id);
-        $details = $this->db->get(db_prefix() . 'goods_delivery_detail')->result_array();
-
-        foreach($details as $detail){
-            // Only create if Serial Number exists and doesn't already have a licence for this delivery
-            if(!empty($detail['serial_number'])){
-                
-                // Check duplicate
-                $this->db->where('serial_number', $detail['serial_number']);
-                $this->db->where('delivery_id', $delivery_id);
-                $exists = $this->db->get(db_prefix().'wh_licences')->row();
-
-                if(!$exists){
-                    $data = [
-                        'serial_number' => $detail['serial_number'],
-                        'commodity_id' => $detail['commodity_code'],
-                        'customer_id' => $delivery->customer_code,
-                        'invoice_id' => $delivery->invoice_id, // Assuming relation exists
-                        'delivery_id' => $delivery_id,
-                        'status' => 'draft',
-                        'licence_type' => 'temporary', // Default
-                        'date_created' => date('Y-m-d H:i:s'),
-                        'staff_id' => get_staff_user_id()
-                    ];
-                    $this->db->insert(db_prefix().'wh_licences', $data);
-                }
-            }
+    // CHECK INVOICE STATUS
+    $licence_type_default = 'temporary';
+    if(isset($delivery->invoice_id) && $delivery->invoice_id != 0){
+        $this->load->model('invoices_model');
+        $invoice = $this->invoices_model->get($delivery->invoice_id);
+        // Status 2 is 'Paid' in Perfex CRM
+        if($invoice && $invoice->status == 2){
+            $licence_type_default = 'permanent';
         }
-        return true;
     }
 
+    // Get Details
+    $this->db->where('goods_delivery_id', $delivery_id);
+    $details = $this->db->get(db_prefix() . 'goods_delivery_detail')->result_array();
+
+    foreach($details as $detail){
+        if(!empty($detail['serial_number'])){
+            // Check duplicate
+            $this->db->where('serial_number', $detail['serial_number']);
+            $this->db->where('delivery_id', $delivery_id);
+            $exists = $this->db->get(db_prefix().'wh_licences')->row();
+
+            if(!$exists){
+                $data = [
+                    'serial_number' => $detail['serial_number'],
+                    'commodity_id' => $detail['commodity_code'],
+                    'customer_id' => $delivery->customer_code,
+                    'invoice_id' => $delivery->invoice_id, 
+                    'delivery_id' => $delivery_id,
+                    'status' => 'draft',
+                    'licence_type' => $licence_type_default, // USES SMART LOGIC
+                    'date_created' => date('Y-m-d H:i:s'),
+                    'staff_id' => get_staff_user_id()
+                ];
+                $this->db->insert(db_prefix().'wh_licences', $data);
+            }
+        }
+    }
+    return true;
+}
     // MANUAL CREATION HELPER
     public function get_serials_for_licensing($clientid, $invoiceid) {
         $this->db->select(db_prefix().'goods_delivery_detail.serial_number, '.db_prefix().'items.description');
