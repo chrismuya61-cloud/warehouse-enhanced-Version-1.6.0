@@ -325,8 +325,9 @@ if (get_option('inventory_delivery_number_prefix') == '') add_option('inventory_
 if (get_option('next_inventory_delivery_mumber') == '') add_option('next_inventory_delivery_mumber', 1, 1);
 
 // --------------------------------------------------------------------------
-// WARRANTY CLAIMS TABLE
+// WARRANTY MANAGEMENT TABLES
 // --------------------------------------------------------------------------
+
 if (!$CI->db->table_exists(db_prefix() . 'wh_warranty_claims')) {
     $CI->db->query('CREATE TABLE `' . db_prefix() . "wh_warranty_claims` (
       `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -339,6 +340,16 @@ if (!$CI->db->table_exists(db_prefix() . 'wh_warranty_claims')) {
       `resolution_note` text NULL,
       `staff_id` int(11) NOT NULL,
       `date_created` datetime NOT NULL,
+      `invoice_id` INT(11) DEFAULT 0,
+      `expense_id` INT(11) DEFAULT 0,
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=" . $CI->db->char_set . ';');
+} else {
+    // Update table if it exists (Idempotency)
+    if (!$CI->db->field_exists('invoice_id', db_prefix() . 'wh_warranty_claims')) {
+        $CI->db->query('ALTER TABLE `' . db_prefix() . 'wh_warranty_claims` ADD COLUMN `invoice_id` INT(11) DEFAULT 0;');
+    }
+    if (!$CI->db->field_exists('expense_id', db_prefix() . 'wh_warranty_claims')) {
+        $CI->db->query('ALTER TABLE `' . db_prefix() . 'wh_warranty_claims` ADD COLUMN `expense_id` INT(11) DEFAULT 0;');
+    }
 }
