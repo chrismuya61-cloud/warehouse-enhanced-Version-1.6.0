@@ -42,7 +42,7 @@ class Warehouse extends AdminController {
         $this->load->view('warehouse/warranty/claim_modal', $data);
     }
 	// --------------------------------------------------------------------------
-    // WARRANTY MANAGEMENT FEATURES
+    // WARRANTY MANAGEMENT & CLAIMS
     // --------------------------------------------------------------------------
 
     public function warranty_dashboard()
@@ -98,6 +98,84 @@ class Warehouse extends AdminController {
             set_alert($success ? 'success' : 'danger', $message);
             redirect(admin_url('warehouse/warranty_claims'));
         }
+    }
+
+    public function get_claim_modal($detail_id, $commodity_id, $customer_id)
+    {
+        if (!$this->input->is_ajax_request()) show_404();
+
+        $data['detail_id'] = $detail_id;
+        $data['commodity_id'] = $commodity_id;
+        $data['customer_id'] = $customer_id;
+        
+        $data['item'] = $this->warehouse_model->get_commodity($commodity_id);
+        
+        $this->db->where('id', $detail_id);
+        $detail = $this->db->get(db_prefix() . 'goods_delivery_detail')->row();
+        $data['serial_number'] = $detail ? $detail->serial_number : '';
+        
+        $this->load->view('warehouse/warranty/claim_modal', $data);
+    }
+
+    public function convert_claim_to_invoice($claim_id)
+    {
+        if (!has_permission('invoices', '', 'create')) access_denied('Create Invoice');
+
+        $this->load->model('invoices_model');
+        $claim = $this->warehouse_model->get_warranty_claim($claim_id);
+
+        if (!$claim) {
+            set_alert('danger', _l('claim_not_found'));
+            redirect(admin_url('warehouse/warranty_claims'));
+        }
+
+        $item = $this->warehouse_model->get_commodity($claim->commodity_id);
+        
+        $this->db->where('id', $claim->detail_id);
+        $delivery_detail = $this->db->get(db_prefix() . 'goods_delivery_detail')->row();
+        $serial_ref = $delivery_detail ? $delivery_detail->serial_number : 'N/A';
+        
+        $new_invoice_data = [
+            'clientid' => $claim->customer_id,
+            'number' => get_option('next_invoice_number'),
+            'date' => date('Y-m-d'),
+            'duedate' => date('Y-m-d', strtotime('+30 days')),
+            'currency' => $this->currencies_model->get_base_currency()->id,
+            'subtotal' => 0.00,
+            'total' => 0.00,
+            'billing_street' => '', 
+            'adminnote' => 'Generated from Warranty Claim #' . $claim_id,
+            'newitems' => [
+                1 => [
+                    'description' => $item->description . ' (Warranty Service)',
+                    'long_description' => 'Service for Claim on: ' . _d($claim->claim_date) . '. Serial Number: ' . $serial_ref . '. Issue: ' . $claim->issue_description,
+                    'qty' => 1,
+                    'rate' => 0.00, 
+                    'unit' => '',
+                    'taxname' => []
+                ]
+            ]
+        ];
+
+        $id = $this->invoices_model->add($new_invoice_data);
+        
+        if ($id) {
+            $this->warehouse_model->update_warranty_claim(['invoice_id' => $id], $claim_id);
+            set_alert('success', _l('invoice_created_successfully'));
+            redirect(admin_url('invoices/invoice/' . $id));
+        } else {
+            set_alert('danger', _l('invoice_creation_failed'));
+            redirect(admin_url('warehouse/warranty_claims'));
+        }
+    }
+
+    public function create_expense_from_claim($claim_id)
+    {
+        if (!has_permission('expenses', '', 'create')) access_denied('Create Expense');
+        $claim = $this->warehouse_model->get_warranty_claim($claim_id);
+        $url = admin_url('expenses/expense?customer_id=' . $claim->customer_id . '&claim_ref=' . $claim_id);
+        redirect($url);
+    }
         
         // Load modal view logic here or handle via JS
     }
