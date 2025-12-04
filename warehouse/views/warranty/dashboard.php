@@ -36,7 +36,6 @@
                 </div>
             </div>
         </div>
-
         <div class="row">
              <div class="col-md-12">
                 <div class="panel_s">
@@ -46,7 +45,7 @@
                             <a href="<?php echo admin_url('warehouse/warranty_claims'); ?>" class="btn btn-default"><?php echo _l('warranty_claims'); ?></a>
                         </div>
                         <hr class="hr-panel-heading" />
-                        <h4 class="no-margin"><?php echo _l('warranty_list'); ?></h4>
+                         <h4 class="no-margin"><?php echo _l('warranty_list'); ?></h4>
                          <div class="clearfix"></div>
                          <br>
                         <?php render_datatable([
