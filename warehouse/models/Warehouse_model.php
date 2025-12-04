@@ -215,6 +215,7 @@ $this->auto_create_licences_from_delivery($id);
     }
 
     // AUTOMATION: Call this function when Goods Delivery is Approved
+
 public function auto_create_licences_from_delivery($delivery_id) {
     $this->db->where('id', $delivery_id);
     $delivery = $this->db->get(db_prefix() . 'goods_delivery')->row();
@@ -260,6 +261,28 @@ public function auto_create_licences_from_delivery($delivery_id) {
         }
     }
     return true;
+}
+
+public function get_serials_for_licensing($clientid, $invoiceid) {
+    // Select serial, item name, AND invoice status
+    $this->db->select(db_prefix().'goods_delivery_detail.serial_number, '.db_prefix().'items.description, '.db_prefix().'invoices.status as invoice_status, '.db_prefix().'invoices.number as invoice_number');
+    $this->db->from(db_prefix().'goods_delivery_detail');
+    $this->db->join(db_prefix().'goods_delivery', db_prefix().'goods_delivery.id = '.db_prefix().'goods_delivery_detail.goods_delivery_id', 'left');
+    $this->db->join(db_prefix().'items', db_prefix().'items.id = '.db_prefix().'goods_delivery_detail.commodity_code', 'left');
+    // Join Invoice to check status
+    $this->db->join(db_prefix().'invoices', db_prefix().'invoices.id = '.db_prefix().'goods_delivery.invoice_id', 'left');
+    
+    if($clientid){
+        $this->db->where(db_prefix().'goods_delivery.customer_code', $clientid);
+    }
+    if($invoiceid){
+            $this->db->where(db_prefix().'goods_delivery.invoice_id', $invoiceid);
+    }
+    $this->db->where(db_prefix().'goods_delivery_detail.serial_number !=', '');
+    
+    // Exclude serials that already have active licenses? Optional.
+    
+    return $this->db->get()->result_array();
 }
     // MANUAL CREATION HELPER
     public function get_serials_for_licensing($clientid, $invoiceid) {
