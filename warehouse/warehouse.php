@@ -162,15 +162,15 @@ function warehouse_menu_items() {
         'position' => 25, // Adjust position as needed
     ]);
 }
-        if (has_permission('wh_licences', '', 'view') || has_permission('wh_licences', '', 'view_own')) {
-    $CI->app_menu->add_sidebar_children_item('warehouse', [
-        'slug'     => 'wa_licence_management',
-        'name'     => _l('licence_management'),
-        'icon'     => 'fa fa-key',
-        'href'     => admin_url('warehouse/licence_management'),
-        'position' => 26,
-    ]);
-}
+// License Management Menu
+    if (has_permission('wh_licences', '', 'view') || has_permission('wh_licences', '', 'view_own')) {
+        $CI->app_menu->add_sidebar_children_item('warehouse', [
+            'slug'     => 'wa_licence_management',
+            'name'     => _l('licence_management'),
+            'icon'     => 'fa fa-key',
+            'href'     => admin_url('warehouse/licence_management'), // Points to the new controller function
+            'position' => 26,
+        ]);
     }
 }
 
@@ -235,6 +235,25 @@ function warehouse_load_js(){
         
         echo '<script src="' . module_dir_url(WAREHOUSE_MODULE_NAME, 'assets/js/warranty.js').'?v=' . time().'"></script>';
     }
+
+        // Load License JS
+    if (strpos($viewuri, '/warehouse/licence_management') !== false) {
+        // We will inject the logic for manual serial number lookup into the modal view script itself
+    }
+}
+
+// ---------------------------------------------------------
+// CRON JOB FUNCTIONS
+// ---------------------------------------------------------
+
+function wh_check_licence_expiration() {
+    $CI = &get_instance();
+    $CI->load->model('warehouse/warehouse_model');
+    // Ensure method exists before calling (safety check)
+    if(method_exists($CI->warehouse_model, 'cron_check_licence_expiration')){
+        $CI->warehouse_model->cron_check_licence_expiration();
+    }
+}
 }
 function warehouse_add_head_components(){
     $viewuri = $_SERVER['REQUEST_URI'];
