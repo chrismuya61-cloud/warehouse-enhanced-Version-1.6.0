@@ -21,7 +21,7 @@ class Warehouse_model extends App_Model {
         parent::__construct();
     }
 
-	// Warranty Dashboard Counts
+// Warranty Stats
     public function get_warranty_count($type) {
         $today = date('Y-m-d');
         $this->db->select('count(*) as count');
@@ -46,7 +46,7 @@ class Warehouse_model extends App_Model {
         return $this->db->count_all_results(db_prefix() . 'wh_warranty_claims');
     }
 
-    // CRUD for Claims
+    // Claim CRUD
     public function add_warranty_claim($data) {
         $data['date_created'] = date('Y-m-d H:i:s');
         $data['staff_id'] = get_staff_user_id();
@@ -57,6 +57,11 @@ class Warehouse_model extends App_Model {
     public function update_warranty_claim($data, $id) {
         $this->db->where('id', $id);
         return $this->db->update(db_prefix() . 'wh_warranty_claims', $data);
+    }
+
+    public function get_warranty_claim($id) {
+        $this->db->where('id', $id);
+        return $this->db->get(db_prefix() . 'wh_warranty_claims')->row();
     }
     /**
      * RESTORED: Add Activity Log
