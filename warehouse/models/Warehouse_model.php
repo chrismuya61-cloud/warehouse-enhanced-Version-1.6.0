@@ -21,38 +21,27 @@ class Warehouse_model extends App_Model {
         parent::__construct();
     }
 // --------------------------------------------------------------------------
-// LICENSE MODEL FUNCTIONS
+// LICENSE MANAGEMENT FUNCTIONS (ADD TO Warehouse_model class)
 // --------------------------------------------------------------------------
 
 public function add_licence($data) {
-    // Only set default creation fields if not updating
     if(!isset($data['id'])) {
         $data['date_created'] = date('Y-m-d H:i:s');
         $data['staff_id'] = get_staff_user_id();
+        $this->db->insert(db_prefix() . 'wh_licences', $data);
+        return $this->db->insert_id();
     }
     
-    // Ensure permanent licences have a very long expiry date or are simply flagged
-    if($data['licence_type'] == 'permanent' && empty($data['validity_end_date'])){
-        // Example: Set expiry 100 years out if permanent, or handle as per client policy
-    }
-    
-    // If we have an ID, we update, otherwise insert
-    if(isset($data['id']) && $data['id'] != ''){
-        $id = $data['id'];
-        unset($data['id']);
-        $this->db->where('id', $id);
-        $this->db->update(db_prefix() . 'wh_licences', $data);
-        return $this->db->affected_rows() > 0;
-    }
-    
-    $this->db->insert(db_prefix() . 'wh_licences', $data);
-    return $this->db->insert_id();
+    $id = $data['id'];
+    unset($data['id']);
+    $this->db->where('id', $id);
+    $this->db->update(db_prefix() . 'wh_licences', $data);
+    return $this->db->affected_rows() > 0;
 }
 
 public function update_licence($data, $id) {
-    // Delegate to add_licence with ID
-    $data['id'] = $id;
-    return $this->add_licence($data);
+    $this->db->where('id', $id);
+    return $this->db->update(db_prefix() . 'wh_licences', $data);
 }
 
 public function get_licence($id) {
@@ -60,7 +49,10 @@ public function get_licence($id) {
     return $this->db->get(db_prefix() . 'wh_licences')->row();
 }
 
-// AUTOMATION: Create License Drafts based on Goods Delivery (Stock Export)
+/**
+ * AUTOMATION: Creates a license entry when Goods Delivery is approved.
+ * Sets license type based on linked invoice status.
+ */
 public function auto_create_licences_from_delivery($delivery_id) {
     $this->db->where('id', $delivery_id);
     $delivery = $this->db->get(db_prefix() . 'goods_delivery')->row();
@@ -71,7 +63,7 @@ public function auto_create_licences_from_delivery($delivery_id) {
     if(isset($delivery->invoice_id) && $delivery->invoice_id != 0){
         $this->load->model('invoices_model');
         $invoice = $this->invoices_model->get($delivery->invoice_id);
-        // Status 2 is 'Paid' in Perfex CRM (Default status IDs may vary, confirm if needed)
+        // Status 2 typically means 'Paid' in Perfex CRM
         if($invoice && $invoice->status == 2){
             $licence_type_default = 'permanent';
         }
@@ -94,7 +86,7 @@ public function auto_create_licences_from_delivery($delivery_id) {
                     'invoice_id' => $delivery->invoice_id,
                     'delivery_id' => $delivery_id,
                     'status' => 'draft',
-                    'licence_type' => $licence_type_default, // SMART LOGIC APPLIED
+                    'licence_type' => $licence_type_default, 
                     'date_created' => date('Y-m-d H:i:s'),
                     'staff_id' => get_staff_user_id()
                 ];
@@ -105,7 +97,7 @@ public function auto_create_licences_from_delivery($delivery_id) {
     return true;
 }
 
-// Manual Creation Helper (Passes Invoice Status to Controller)
+// Helper for Manual License Creation Modal
 public function get_serials_for_licensing($clientid, $invoiceid) {
     $this->db->select(db_prefix().'goods_delivery_detail.serial_number, '.db_prefix().'items.description, '.db_prefix().'invoices.status as invoice_status, '.db_prefix().'invoices.number as invoice_number, '.db_prefix().'goods_delivery_detail.commodity_code as commodity_id');
     $this->db->from(db_prefix().'goods_delivery_detail');
@@ -122,16 +114,12 @@ public function get_serials_for_licensing($clientid, $invoiceid) {
     $this->db->where(db_prefix().'goods_delivery_detail.serial_number IS NOT NULL');
     $this->db->where(db_prefix().'goods_delivery_detail.serial_number !=', '');
     
-    // Exclude serials already with an ACTIVE license
-    $this->db->where(db_prefix().'goods_delivery_detail.serial_number NOT IN (
-        SELECT serial_number FROM '.db_prefix().'wh_licences WHERE status = "active"
-    )');
-    
     return $this->db->get()->result_array();
 }
 
-// CRON JOB: Check Expiration
+// CRON JOB: Checks for licenses expiring in the next 7 days and sends a notification
 public function cron_check_licence_expiration() {
+    $this->load->model('staff_model');
     $date_check = date('Y-m-d', strtotime('+7 days'));
     
     $this->db->where('validity_end_date', $date_check);
@@ -139,20 +127,22 @@ public function cron_check_licence_expiration() {
     $expiring = $this->db->get(db_prefix().'wh_licences')->result_array();
 
     foreach($expiring as $licence){
-        // Notify Staff
+        $staff_to_notify = $licence['staff_id'];
+        if(!$staff_to_notify) {
+            // Fallback to a default admin if no staff is linked, or find all license admins
+            $staff_to_notify = $this->staff_model->get_admin_staff_for_send_notification();
+        }
+        
         add_notification([
             'description'     => 'Licence Renewal Due for Serial: ' . $licence['serial_number'] . ' (Expiring ' . _d($licence['validity_end_date']) . ')',
-            'touserid'        => $licence['staff_id'], // Notify the assigned staff member
+            'touserid'        => $staff_to_notify,
             'fromcompany'     => true,
             'link'            => 'warehouse/licence_management',
         ]);
-        
-        // Optional: Send Email to Customer (Requires dedicated mail class)
     }
     return true;
 }
-	
-// Warranty Stats
+	// Warranty Stats
     public function get_warranty_count($type) {
         $today = date('Y-m-d');
         $this->db->select('count(*) as count');
