@@ -334,7 +334,6 @@ function warehouse_module_init_menu_items()
         'href'     => admin_url('warehouse/licenses'),
         'position' => 10,
     ]);
-
     }
 }
 
