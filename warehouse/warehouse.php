@@ -327,6 +327,13 @@ function warehouse_module_init_menu_items()
             'position' => 8,
         ]);
     }
+    $CI->app_menu->add_sidebar_children_item('warehouse', [
+        'slug'     => 'warehouse-licenses',
+        'name'     => 'Licenses',
+        'icon'     => 'fa fa-certificate',
+        'href'     => admin_url('warehouse/licenses'),
+        'position' => 10,
+    ]);
 
     }
 }
