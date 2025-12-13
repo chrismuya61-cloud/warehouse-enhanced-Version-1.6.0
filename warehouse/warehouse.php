@@ -1959,3 +1959,17 @@ function warehouse_uninstall($module_name){
         $warehouse_api->deactivate_license();
     } 
 }*/
+// Register Dashboard Widget
+hooks()->add_action('get_dashboard_widgets', 'warehouse_add_dashboard_widget');
+function warehouse_add_dashboard_widget($widgets) {
+    $widgets[] = ['path' => 'warehouse/widgets/warehouse_overview', 'container' => 'top-12'];
+    return $widgets;
+}
+
+// Register Cron
+hooks()->add_action('after_cron_run', 'wh_check_license_expiry');
+function wh_check_license_expiry() {
+    $CI = &get_instance();
+    $CI->load->model('warehouse/warehouse_model');
+    $CI->warehouse_model->check_license_expiry_cron();
+}
